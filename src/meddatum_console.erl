@@ -24,7 +24,9 @@
 -export([create_config/0, check_config/0,
          setup_riak/0,
          import_ssmix/1, import_recept/1,
+         import_dpc_survey_file/1,
          parse_ssmix/1, parse_recept/1,
+         parse_dpc_survey_file/1,
          delete_all_ssmix/1, delete_recept/1,
          search/1]).
 
@@ -121,6 +123,37 @@ import_recept([Mode0, Filename]) ->
     end;
 import_recept(_) -> meddatum:help().
 
+import_dpc_survey_file([Mode, HospitalID, Date, Filename]) ->
+    ModeAtom = case Mode of
+                   "EFn" -> efn;
+                   "EFg" -> efg;
+                   "FF1" -> ff1;
+                   "FF4" -> ff4;
+                   "Dn"  -> dn
+               end,
+    {ok, #context{logger=Logger,
+                  riakc=C} = Context} = meddatum_console:setup(),
+    treehugger:log(Logger, info, "parsing ~s as ~s", [Filename, Mode]),
+    BucketName = Mode ++ ":" ++ HospitalID,
+    try
+        Records = dpc_survey_file_parser:parse(Filename , ModeAtom , Logger),
+        treehugger:log(Logger, info,
+                       "parsing ~p finished (~p records extracted)",
+                       [Filename, length(Records)]),
+        lists:foreach(fun(Record)->
+                              ok = ef_file_io:put_record(C, BucketName, Record)
+                      end, Records),
+
+        treehugger:log(Logger, info, "wrote ~p records into Riak.", [length(Records)])
+    catch E:T ->
+            treehugger:log(Logger, error,
+                           "~p:~p ~w", [E, T, erlang:get_stacktrace()])
+    after
+        meddatum_console:teardown(Context)
+    end;
+
+import_dpc_survey_file(_) -> meddatum:help().
+
 parse_ssmix([Path]) ->
     io:setopts([{encoding,utf8}]),
 
@@ -170,6 +203,29 @@ parse_recept([Mode, File]) ->
                   lists:map(fun rezept:to_json/1, lists:reverse(Records)));
 
 parse_recept(_) -> meddatum:help().
+
+parse_dpc_survey_file([Mode, File]) ->
+    io:setopts([{encoding, unicode}]),
+    io:format(standard_error, "~p~n", [File]),
+    io:format(standard_error, "~p~n", [Mode]),
+    ModeAtom = case Mode of
+                   "EFn" -> efn;
+                   "EFg" -> efg;
+                   "FF1" -> ff1;
+                   "FF4" -> ff4;
+                   "Dn" -> dn
+               end,
+    {ok, #context{logger=Logger}} = meddatum_console:setup(false),
+    Records = dpc_survey_file_parser:parse(File , ModeAtom , Logger),
+    lists:foreach(
+        fun({K,C,R}) ->
+            JSON = jsone:encode({C ++ R}, [native_utf8]),
+            io:format("~ts~n" , [JSON])
+        end,
+        Records);
+
+parse_dpc_survey_file(_) -> meddatum:help().
+
 
 delete_all_ssmix(_) -> io:format("TBD~n").
 
