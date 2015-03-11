@@ -1,4 +1,4 @@
--module(ef_file_io).
+-module(dpc_survey_io).
 
 -export([put_record/3]).
 
