@@ -134,14 +134,13 @@ import_dpcs([Mode, HospitalID, Date, Filename]) ->
     {ok, #context{logger=Logger,
                   riakc=C} = Context} = meddatum_console:setup(),
     treehugger:log(Logger, info, "parsing ~s as ~s", [Filename, Mode]),
-    BucketName = Mode ++ ":" ++ HospitalID,
     try
         Records = dpcs_parser:parse(Filename , ModeAtom , Logger),
         treehugger:log(Logger, info,
                        "parsing ~p finished (~p records extracted)",
                        [Filename, length(Records)]),
         lists:foreach(fun(Record)->
-                              ok = dpcs_io:put_record(C, BucketName, Record)
+                              ok = dpcs_io:put_record(C, Mode , HospitalID , Date , Record)
                       end, Records),
 
         treehugger:log(Logger, info, "wrote ~p records into Riak.", [length(Records)])
