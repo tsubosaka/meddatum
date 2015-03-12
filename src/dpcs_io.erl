@@ -1,4 +1,4 @@
--module(dpc_survey_io).
+-module(dpcs_io).
 
 -export([put_record/3]).
 

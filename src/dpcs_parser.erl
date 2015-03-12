@@ -1,4 +1,4 @@
--module(dpc_survey_file_parser).
+-module(dpcs_parser).
 
 -export([parse/3]).
 
@@ -47,7 +47,7 @@ parse_ff1_tokens(Tokens) ->
     case Tokens of 
         [Cocd, Kanjaid, Nyuymd, Kaisukanrino, Medical_no, Code , Version, Seqno | Payload] ->
             F = fun({K,V}, Acc) ->
-                dpc_survey:addField({K,V}, dn , Acc)
+                dpcs:addField({K,V}, dn , Acc)
             end,
             CommonField_list = [{cocd, Cocd},{kanjaid,Kanjaid},{nyuymd,Nyuymd}],
             CommonField =  lists:foldl(F ,[], CommonField_list),           
@@ -63,7 +63,7 @@ parse_ff4_tokens(Tokens) ->
     case Tokens of
         [Cocd, Kanjaid,Nyuymd,Taiymd,Hokkb] ->
             F = fun({K,V}, Acc) ->
-                dpc_survey:addField({K,V}, dn , Acc)
+                dpcs:addField({K,V}, dn , Acc)
             end,
             CommonField_list = [{cocd, Cocd},{kanjaid,Kanjaid},{taiymd,Taiymd},{nyuymd,Nyuymd},{hokkb,Hokkb}],
             CommonField =  lists:foldl(F ,[], CommonField_list),           
@@ -82,7 +82,7 @@ parse_dn_tokens(Tokens) ->
           ,Nyugaikb ,Cotype ,Dpcstaymd ,Dpcendymd ,Dpcreckymd ,Dpccd ,Coefficient
         ] ->
             F = fun({K,V}, Acc) ->
-                dpc_survey:addField({K,V}, dn , Acc)
+                dpcs:addField({K,V}, dn , Acc)
             end,
             RececdField_list = [{undno, Undno}, {shinactnm, Shinactnm},{actten, Actten}, {actdrg,Actdrg}, {actzai, Actzai},{actcnt,Actcnt},
               {entenkb, Entenkb}, {hokno,Hokno}, {recesyucd,Recesyucd},
@@ -109,7 +109,7 @@ parse_ef_tokens(Tokens, Mode) ->
          Nyugaikb, Cotype 
         ] ->
             F = fun({K,V}, Acc) ->
-                dpc_survey:addField({K,V}, Mode, Acc)
+                dpcs:addField({K,V}, Mode, Acc)
             end,
             RececdField_list = [{undno, Undno}, {shindetnm, Shindetnm}, {ryo, Ryo}, { kijtani , Kijtani }, {meisaiten, Meisaiten},
               {entenkb, Entenkb}, {jissekiten, Jissekiten}, {includekb, Includekb}, {actten, Actten}, {actdrg,Actdrg},

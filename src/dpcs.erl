@@ -1,4 +1,4 @@
--module(dpc_survey).
+-module(dpcs).
 
 -export([addField/3]).
 
